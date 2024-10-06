@@ -7,7 +7,7 @@ const Header = () => {
         <Link to="/">
           <h1 className=" font-semibold text-xl">Authentication App</h1>
         </Link>
-        <ul className=" flex text-lg font-medium">
+        <ul className=" flex text-base">
           <Link to="/">
             <li className=" hover:bg-slate-300 py-1 px-2 rounded-md">Home</li>
           </Link>
