@@ -1,6 +1,6 @@
 import { CgProfile } from "react-icons/cg";
 import { FiDelete } from "react-icons/fi";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { IoMdLogOut } from "react-icons/io";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -10,6 +10,11 @@ import {
   uploadBytesResumable,
 } from "firebase/storage";
 import { app } from "../firebase";
+import {
+  updateUserFailure,
+  updateUserStart,
+  updateUserSuccess,
+} from "../redux/userSlice";
 
 export default function Profile() {
   const { currentUser } = useSelector((state) => state.user);
@@ -17,6 +22,8 @@ export default function Profile() {
   const [imagePercent, setImagePercent] = useState(0);
   const [imageError, setImageError] = useState(false);
   const [formData, setFormData] = useState({});
+  const [updateSuccess, setUpdateSuccess] = useState(false);
+  const dispatch = useDispatch();
   console.log("imagePercent:-" + imagePercent);
   console.log("form--" + formData);
   const fileRef = useRef(null);
@@ -48,6 +55,33 @@ export default function Profile() {
       }
     );
   };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      dispatch(updateUserStart());
+      const res = await fetch(`/app/user/update/${currentUser._id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(updateUserFailure(data));
+        return;
+      }
+      dispatch(updateUserSuccess(data));
+      setUpdateSuccess(true);
+    } catch (error) {
+      dispatch(updateUserFailure(error));
+    }
+  };
   return (
     <div className=" p-3 max-w-lg mx-auto">
       <div className="flex  justify-center items-center mt-3 gap-2">
@@ -56,7 +90,7 @@ export default function Profile() {
           Profile
         </h1>
       </div>
-      <form action="" className=" flex flex-col mt-3 gap-4 ">
+      <form onSubmit={handleSubmit} className=" flex flex-col mt-3 gap-4 ">
         <input
           type="file"
           ref={fileRef}
@@ -89,6 +123,7 @@ export default function Profile() {
           id="username"
           placeholder="User name"
           className=" bg-slate-100 rounded-lg p-3"
+          onChange={handleChange}
         />
         <input
           type="email"
@@ -96,6 +131,7 @@ export default function Profile() {
           id="email"
           placeholder="Email"
           className=" bg-slate-100 rounded-lg p-3"
+          onChange={handleChange}
         />
         <input
           type="password"
